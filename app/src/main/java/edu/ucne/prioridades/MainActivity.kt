@@ -11,12 +11,23 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.room.Room
+import edu.ucne.prioridades.local.database.PrioridadDb
 import edu.ucne.prioridades.ui.theme.PrioridadesTheme
 
 class MainActivity : ComponentActivity() {
+    private lateinit var prioridadDb: PrioridadDb
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        prioridadDb = Room.databaseBuilder(
+            applicationContext,
+            PrioridadDb::class.java,
+            "Prioridad.db"
+        ).fallbackToDestructiveMigration().build()
+
         setContent {
             PrioridadesTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
