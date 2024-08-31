@@ -10,6 +10,7 @@ import edu.ucne.prioridades.local.entities.PrioridadEntity
     entities = [
         PrioridadEntity::class
     ],
+
     version = 1,
     exportSchema = false
 )
