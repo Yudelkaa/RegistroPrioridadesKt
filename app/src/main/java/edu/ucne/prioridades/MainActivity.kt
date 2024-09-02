@@ -1,7 +1,6 @@
 package edu.ucne.prioridades
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -9,16 +8,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.VerticalAlignmentLine
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -28,6 +28,8 @@ import edu.ucne.prioridades.local.database.PrioridadDb
 import edu.ucne.prioridades.local.entities.PrioridadEntity
 import edu.ucne.prioridades.ui.theme.PrioridadesTheme
 import kotlinx.coroutines.launch
+import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
+import edu.ucne.prioridades.local.dao.PrioridadDao
 
 class MainActivity : ComponentActivity() {
     private lateinit var prioridadDb: PrioridadDb
@@ -43,20 +45,59 @@ class MainActivity : ComponentActivity() {
         ).fallbackToDestructiveMigration().build()
         setContent {
             PrioridadesTheme {
-                PrioridadScreen()
+                Principal(prioridadDb)
             }
         }
     }
 
     @Composable
-    fun PrioridadScreen() {
+    fun Principal(prioridadDb: PrioridadDb) {
+        var mostrarScreen by remember { mutableStateOf(false) }
+
+        Scaffold(
+            floatingActionButton = {
+                if (!mostrarScreen) {
+                    FloatingActionButton(
+                        onClick = { mostrarScreen = true },
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Icon(Icons.Filled.Add, contentDescription = "Añadir Prioridad")
+                    }
+                }
+            }
+        ) {
+            if (mostrarScreen) {
+                PrioridadScreen(onNavigateToMyScreen = { mostrarScreen = false }, prioridadDb)
+            } else {
+                PrioridadListScreen(
+                    prioridadDb.prioridadDao().getAll()
+                        .collectAsStateWithLifecycle(
+                            initialValue = emptyList(),
+                            lifecycleOwner = LocalLifecycleOwner.current,
+                            minActiveState = Lifecycle.State.STARTED
+                        ).value,
+                    Modifier.padding(it)
+                )
+            }
+        }
+    }
+
+    @Composable
+    fun PrioridadScreen(onNavigateToMyScreen: () -> Unit, prioridadDb: PrioridadDb) {
         var descripcion by remember { mutableStateOf("") }
         var diasCompromiso by remember { mutableStateOf("") }
         val scope = rememberCoroutineScope()
-        val lifecycleOwner = LocalLifecycleOwner.current
+        var validacion by remember { mutableStateOf<String?>(null) }
 
         Scaffold(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            floatingActionButton = {
+                FloatingActionButton(onClick = onNavigateToMyScreen) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                }
+            }
         ) {
             Column(
                 modifier = Modifier
@@ -65,7 +106,7 @@ class MainActivity : ComponentActivity() {
                     .padding(8.dp)
             ) {
                 Text(
-                    text = "Consulta de prioridades :D",
+                    text = "Registro de prioridades :D",
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
 
@@ -87,44 +128,47 @@ class MainActivity : ComponentActivity() {
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
+                if (validacion != null) {
+                    Text(
+                        text = validacion!!,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
                 OutlinedButton(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.width(200.dp).align(Alignment.CenterHorizontally),
                     onClick = {
                         scope.launch {
-                            val nuevaPrioridad = PrioridadEntity(
-                                descripcion = descripcion,
-                                diasCompromiso = diasCompromiso.toIntOrNull() ?: 0
-                            )
-                            prioridadDb.prioridadDao().save(nuevaPrioridad)
-                            descripcion = ""
-                            diasCompromiso = ""
+                            try {
+                                val nuevaPrioridad = PrioridadEntity(
+                                    descripcion = descripcion,
+                                    diasCompromiso = diasCompromiso.toIntOrNull() ?: 0
+                                )
+                                guardarPrioridad(prioridadDb.prioridadDao(), nuevaPrioridad)
+                                descripcion = ""
+                                diasCompromiso = ""
+                                validacion = null
+                                onNavigateToMyScreen()
+                            } catch (e: IllegalArgumentException) {
+                                validacion = e.message
+                            }
                         }
                     }
                 ) {
                     Text(text = "Guardar")
                     Icon(Icons.Default.Add, contentDescription = "Guardar")
-                    Icon(Icons.Default.Check, contentDescription = "Nueva")
                 }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                val prioridadList by prioridadDb.prioridadDao().getAll()
-                    .collectAsStateWithLifecycle(
-                        initialValue = emptyList(),
-                        lifecycleOwner = lifecycleOwner,
-                        minActiveState = Lifecycle.State.STARTED
-                    )
-
-                PrioridadListScreen(prioridadList)
             }
         }
     }
 
     @Composable
-    fun PrioridadListScreen(prioridadList: List<PrioridadEntity>) {
+    fun PrioridadListScreen(prioridadList: List<PrioridadEntity>, modifier: Modifier = Modifier) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
                 .padding(8.dp)
         ) {
@@ -189,13 +233,20 @@ class MainActivity : ComponentActivity() {
         }
         HorizontalDivider()
     }
-
-
-    @Preview(showBackground = true, showSystemUi = true)
-    @Composable
-    fun GreetingPreview() {
-        PrioridadesTheme {
-            PrioridadScreen()
-        }
-    }
 }
+
+suspend fun guardarPrioridad(dao: PrioridadDao, prioridad: PrioridadEntity) {
+    if (prioridad.descripcion.isBlank()) {
+        throw IllegalArgumentException("Favor ingresar la descripción")
+    }
+    if (prioridad.diasCompromiso == null || prioridad.diasCompromiso == 0) {
+        throw IllegalArgumentException("Favor ingresar un número mayor a cero")
+    }
+    val existePrioridad = dao.findByDescripcion(prioridad.descripcion)
+    if (existePrioridad != null && existePrioridad.prioridadId != prioridad.prioridadId) {
+        throw IllegalArgumentException("Ya existe una prioridad con esta descripción.")
+    }
+    dao.save(prioridad)
+}
+
+

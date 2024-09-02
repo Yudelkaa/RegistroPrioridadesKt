@@ -28,6 +28,7 @@ interface PrioridadDao {
     @Query("SELECT * FROM Prioridades")
     fun getAll(): Flow<List<PrioridadEntity>>
 
-
+    @Query("SELECT * FROM Prioridades WHERE descripcion = :descripcion LIMIT 1")
+    suspend fun findByDescripcion(descripcion: String): PrioridadEntity?
 
 }
