@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -18,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.VerticalAlignmentLine
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -124,6 +126,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text(text = "Días compromiso") },
                     value = diasCompromiso,
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
                     onValueChange = { diasCompromiso = it }
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -189,7 +192,7 @@ class MainActivity : ComponentActivity() {
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    text = "Días Compromiso",
+                    text = "Días",
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center
@@ -244,7 +247,7 @@ suspend fun guardarPrioridad(dao: PrioridadDao, prioridad: PrioridadEntity) {
     }
     val existePrioridad = dao.findByDescripcion(prioridad.descripcion)
     if (existePrioridad != null && existePrioridad.prioridadId != prioridad.prioridadId) {
-        throw IllegalArgumentException("Ya existe una prioridad con esta descripción.")
+        throw IllegalArgumentException("Ya existe una prioridad con esta descripción")
     }
     dao.save(prioridad)
 }
