@@ -1,9 +1,9 @@
-package edu.ucne.prioridades.local.database
+package edu.ucne.prioridades.data.local.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import edu.ucne.prioridades.local.dao.PrioridadDao
-import edu.ucne.prioridades.local.entities.PrioridadEntity
+import edu.ucne.prioridades.data.local.dao.PrioridadDao
+import edu.ucne.prioridades.data.local.entities.PrioridadEntity
 
 
 @Database(

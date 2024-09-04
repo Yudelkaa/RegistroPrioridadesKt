@@ -1,11 +1,11 @@
-package edu.ucne.prioridades.local.dao
+package edu.ucne.prioridades.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Query
 import androidx.room.Upsert
-import edu.ucne.prioridades.local.database.PrioridadDb
-import edu.ucne.prioridades.local.entities.PrioridadEntity
+import edu.ucne.prioridades.data.local.database.PrioridadDb
+import edu.ucne.prioridades.data.local.entities.PrioridadEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
