@@ -11,13 +11,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.VerticalAlignmentLine
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -26,12 +23,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.room.Room
-import edu.ucne.prioridades.local.database.PrioridadDb
-import edu.ucne.prioridades.local.entities.PrioridadEntity
+import edu.ucne.prioridades.data.local.database.PrioridadDb
+import edu.ucne.prioridades.data.local.entities.PrioridadEntity
 import edu.ucne.prioridades.ui.theme.PrioridadesTheme
 import kotlinx.coroutines.launch
-import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
-import edu.ucne.prioridades.local.dao.PrioridadDao
+import edu.ucne.prioridades.data.local.dao.PrioridadDao
 
 class MainActivity : ComponentActivity() {
     private lateinit var prioridadDb: PrioridadDb
@@ -89,7 +85,7 @@ class MainActivity : ComponentActivity() {
         var descripcion by remember { mutableStateOf("") }
         var diasCompromiso by remember { mutableStateOf("") }
         val scope = rememberCoroutineScope()
-        var validacion by remember { mutableStateOf<String?>(null) }
+        var errorMessage by remember { mutableStateOf<String?>(null) }
 
         Scaffold(
             modifier = Modifier
@@ -131,9 +127,9 @@ class MainActivity : ComponentActivity() {
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                if (validacion != null) {
+                if (errorMessage != null) {
                     Text(
-                        text = validacion!!,
+                        text = errorMessage!!,
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
@@ -152,10 +148,10 @@ class MainActivity : ComponentActivity() {
                                 guardarPrioridad(prioridadDb.prioridadDao(), nuevaPrioridad)
                                 descripcion = ""
                                 diasCompromiso = ""
-                                validacion = null
+                                errorMessage = null
                                 onNavigateToMyScreen()
                             } catch (e: IllegalArgumentException) {
-                                validacion = e.message
+                                errorMessage = e.message
                             }
                         }
                     }
@@ -242,8 +238,8 @@ suspend fun guardarPrioridad(dao: PrioridadDao, prioridad: PrioridadEntity) {
     if (prioridad.descripcion.isBlank()) {
         throw IllegalArgumentException("Favor ingresar la descripción")
     }
-    if (prioridad.diasCompromiso == null || prioridad.diasCompromiso == 0) {
-        throw IllegalArgumentException("Favor ingresar un número mayor a cero")
+    if (prioridad.diasCompromiso == null || prioridad.diasCompromiso!! <= 0) {
+        throw IllegalArgumentException("No ingresar cero ni digitos menores que cero")
     }
     val existePrioridad = dao.findByDescripcion(prioridad.descripcion)
     if (existePrioridad != null && existePrioridad.prioridadId != prioridad.prioridadId) {
