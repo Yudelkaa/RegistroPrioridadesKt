@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
-    id("com.google.devtools.ksp") version "2.0.0-1.0.23"
+    id("com.google.devtools.ksp") version "2.0.20-1.0.24"
     id("com.google.dagger.hilt.android")
     id("org.jetbrains.kotlin.plugin.compose")
     alias(libs.plugins.kotlinx.serialization)
@@ -59,9 +59,11 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     //room
-    implementation("androidx.room:room-runtime:2.6.1")
-    annotationProcessor("androidx.room:room-compiler:2.6.1")
-    ksp("androidx.room:room-compiler:2.6.1")
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.transportation.consumer)
+    //implementation(libs.androidx.ui.desktop)
+    annotationProcessor(libs.room.compiler)
+    ksp(libs.room.compiler)
 
     //optional
     implementation("androidx.room:room-ktx:2.6.1")
@@ -76,6 +78,8 @@ dependencies {
     implementation("com.squareup.moshi:moshi-kotlin:1.14.0")
     implementation("com.squareup.retrofit2:converter-moshi:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
