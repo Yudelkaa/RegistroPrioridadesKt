@@ -4,7 +4,6 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Query
 import androidx.room.Upsert
-import edu.ucne.prioridades.data.local.database.PrioridadDb
 import edu.ucne.prioridades.data.local.entities.PrioridadEntity
 import kotlinx.coroutines.flow.Flow
 
