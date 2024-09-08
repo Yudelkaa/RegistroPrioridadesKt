@@ -12,10 +12,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import edu.ucne.prioridades.data.local.dao.PrioridadDao
 import edu.ucne.prioridades.data.local.database.PrioridadDb
 import edu.ucne.prioridades.data.local.entities.PrioridadEntity
 import kotlinx.coroutines.launch
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrioridadScreen(
@@ -38,6 +38,18 @@ fun PrioridadScreen(
                 diasCompromiso = prioridad.diasCompromiso.toString()
             }
         }
+    }
+
+    // Validación
+    val diasCompromisoInt = diasCompromiso.toIntOrNull()
+    val isDescripcionValid = descripcion.isNotBlank()
+    val isDiasCompromisoValid = diasCompromisoInt != null && diasCompromisoInt > 0
+    val isValid = isDescripcionValid && isDiasCompromisoValid
+
+    errorMessage = when {
+        !isDescripcionValid -> "Favor ingresar la descripción"
+        !isDiasCompromisoValid -> "El valor de días de compromiso debe ser un número positivo mayor que cero"
+        else -> null
     }
 
     Scaffold(
@@ -77,26 +89,44 @@ fun PrioridadScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage ?: "",
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
+                }
+
                 Row(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Button(
                         onClick = {
-                            scope.launch {
-                                try {
-                                    val prioridad = PrioridadEntity(
-                                        prioridadId = if (prioridadId == 0) null else prioridadId,
-                                        descripcion = descripcion,
-                                        diasCompromiso = diasCompromiso.toIntOrNull() ?: 0
-                                    )
-                                    dao.save(prioridad)
-                                    goBack()
-                                } catch (e: Exception) {
-                                    errorMessage = e.message
+                            if (isValid) {
+                                scope.launch {
+                                    try {
+                                        val existePrioridad = dao.findByDescripcion(descripcion)
+                                        if (existePrioridad != null && existePrioridad.prioridadId != prioridadId) {
+                                            errorMessage = "Ya existe una prioridad con esta descripción"
+                                            return@launch
+                                        }
+
+                                        val prioridad = PrioridadEntity(
+                                            prioridadId = if (prioridadId == 0) null else prioridadId,
+                                            descripcion = descripcion,
+                                            diasCompromiso = diasCompromisoInt!!
+                                        )
+
+                                        guardarPrioridad(dao, prioridad)
+                                        goBack()
+                                    } catch (e: Exception) {
+                                        errorMessage = "Error al guardar la prioridad."
+                                    }
                                 }
                             }
-                        }
+                        },
+                        enabled = isValid
                     ) {
                         Text(text = "Guardar")
                         Icon(Icons.Default.Add, contentDescription = "Add")
@@ -114,7 +144,7 @@ fun PrioridadScreen(
                                         )
                                         goBack()
                                     } catch (e: Exception) {
-                                        errorMessage = e.message
+                                        errorMessage = "Error al eliminar la prioridad."
                                     }
                                 }
                             }
@@ -124,12 +154,6 @@ fun PrioridadScreen(
                             Text("Eliminar")
                         }
                     }
-                }
-
-                if (errorMessage != null) {
-                    Text(
-                        text = errorMessage ?: ""
-                    )
                 }
             }
         },
@@ -142,4 +166,18 @@ fun PrioridadScreen(
             }
         }
     )
+}
+
+suspend fun guardarPrioridad(dao: PrioridadDao, prioridad: PrioridadEntity) {
+    if (prioridad.descripcion.isBlank()) {
+        throw IllegalArgumentException("Favor ingresar la descripción")
+    }
+    if (prioridad.diasCompromiso == null || prioridad.diasCompromiso!! <= 0) {
+        throw IllegalArgumentException("No ingresar cero ni dígitos menores que cero")
+    }
+    val existePrioridad = dao.findByDescripcion(prioridad.descripcion)
+    if (existePrioridad != null && existePrioridad.prioridadId != prioridad.prioridadId) {
+        throw IllegalArgumentException("Ya existe una prioridad con esta descripción")
+    }
+    dao.save(prioridad)
 }
