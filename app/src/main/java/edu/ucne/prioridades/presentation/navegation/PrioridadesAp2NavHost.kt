@@ -45,11 +45,11 @@ fun PrioridadesAp2NavHost(
         composable<Screen.PrioridadScreen> {
             val args = it.toRoute<Screen.PrioridadScreen>()
             PrioridadScreen(
-                prioridadId = args.prioridadId,
                 goBack = {
                     navHost.navigateUp()
                 },
-                prioridadDb = prioridadDb
+                prioridadDb = prioridadDb,
+                inicialPrioridadId = args.prioridadId
             )
         }
     }
