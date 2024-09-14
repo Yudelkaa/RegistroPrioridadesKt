@@ -6,7 +6,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -16,16 +15,18 @@ import edu.ucne.prioridades.data.local.dao.PrioridadDao
 import edu.ucne.prioridades.data.local.database.PrioridadDb
 import edu.ucne.prioridades.data.local.entities.PrioridadEntity
 import kotlinx.coroutines.launch
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrioridadScreen(
+    inicialPrioridadId: Int,
     prioridadDb: PrioridadDb,
-    goBack: () -> Unit,
-    prioridadId: Int
+    goBack: () -> Unit
 ) {
     val dao = prioridadDb.prioridadDao()
     val scope = rememberCoroutineScope()
 
+    val prioridadId by remember { mutableIntStateOf(inicialPrioridadId) }
     var descripcion by remember { mutableStateOf("") }
     var diasCompromiso by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -35,22 +36,16 @@ fun PrioridadScreen(
             val prioridad = dao.find(prioridadId)
             if (prioridad != null) {
                 descripcion = prioridad.descripcion
-                diasCompromiso = prioridad.diasCompromiso.toString()
+                diasCompromiso = prioridad.diasCompromiso?.toString() ?: ""
             }
         }
     }
 
-    // Validación
+    // Validaciones
     val diasCompromisoInt = diasCompromiso.toIntOrNull()
     val isDescripcionValid = descripcion.isNotBlank()
     val isDiasCompromisoValid = diasCompromisoInt != null && diasCompromisoInt > 0
     val isValid = isDescripcionValid && isDiasCompromisoValid
-
-    errorMessage = when {
-        !isDescripcionValid -> "Favor ingresar la descripción"
-        !isDiasCompromisoValid -> "El valor de días de compromiso debe ser un número positivo mayor que cero"
-        else -> null
-    }
 
     Scaffold(
         topBar = {
@@ -63,11 +58,11 @@ fun PrioridadScreen(
                 }
             )
         },
-        content = {
+        content = { paddingValues ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(it)
+                    .padding(paddingValues)
                     .padding(16.dp)
             ) {
                 OutlinedTextField(
@@ -106,22 +101,15 @@ fun PrioridadScreen(
                             if (isValid) {
                                 scope.launch {
                                     try {
-                                        val existePrioridad = dao.findByDescripcion(descripcion)
-                                        if (existePrioridad != null && existePrioridad.prioridadId != prioridadId) {
-                                            errorMessage = "Ya existe una prioridad con esta descripción"
-                                            return@launch
-                                        }
-
                                         val prioridad = PrioridadEntity(
                                             prioridadId = if (prioridadId == 0) null else prioridadId,
                                             descripcion = descripcion,
-                                            diasCompromiso = diasCompromisoInt!!
+                                            diasCompromiso = diasCompromisoInt
                                         )
-
                                         guardarPrioridad(dao, prioridad)
                                         goBack()
                                     } catch (e: Exception) {
-                                        errorMessage = "Error al guardar la prioridad."
+                                        errorMessage = e.message
                                     }
                                 }
                             }
@@ -137,11 +125,7 @@ fun PrioridadScreen(
                             onClick = {
                                 scope.launch {
                                     try {
-                                        dao.delete(
-                                            PrioridadEntity(
-                                                prioridadId = prioridadId
-                                            )
-                                        )
+                                        dao.delete(PrioridadEntity(prioridadId = prioridadId))
                                         goBack()
                                     } catch (e: Exception) {
                                         errorMessage = "Error al eliminar la prioridad."
@@ -155,14 +139,6 @@ fun PrioridadScreen(
                         }
                     }
                 }
-            }
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { goBack() },
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
             }
         }
     )
