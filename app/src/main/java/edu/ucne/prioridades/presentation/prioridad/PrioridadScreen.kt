@@ -6,7 +6,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -27,7 +26,7 @@ fun PrioridadScreen(
     val dao = prioridadDb.prioridadDao()
     val scope = rememberCoroutineScope()
 
-    val prioridadId by remember { mutableStateOf(inicialPrioridadId) }
+    val prioridadId by remember { mutableIntStateOf(inicialPrioridadId) }
     var descripcion by remember { mutableStateOf("") }
     var diasCompromiso by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -47,12 +46,6 @@ fun PrioridadScreen(
     val isDescripcionValid = descripcion.isNotBlank()
     val isDiasCompromisoValid = diasCompromisoInt != null && diasCompromisoInt > 0
     val isValid = isDescripcionValid && isDiasCompromisoValid
-
-    errorMessage = when {
-        !isDescripcionValid -> "Favor ingresar la descripción"
-        !isDiasCompromisoValid -> "El valor de días de compromiso debe ser un número positivo mayor que cero"
-        else -> null
-    }
 
     Scaffold(
         topBar = {
