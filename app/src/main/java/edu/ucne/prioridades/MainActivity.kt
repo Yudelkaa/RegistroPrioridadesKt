@@ -11,10 +11,11 @@ import edu.ucne.prioridades.presentation.navegation.PrioridadesAp2NavHost
 import edu.ucne.prioridades.ui.theme.PrioridadesTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import dagger.hilt.android.AndroidEntryPoint
 import edu.ucne.prioridades.presentation.prioridad.PrioridadListScreen
 import edu.ucne.prioridades.data.local.entities.PrioridadEntity
 
-
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private lateinit var prioridadDb: PrioridadDb
 
