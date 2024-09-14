@@ -17,16 +17,16 @@ import edu.ucne.prioridades.data.local.entities.PrioridadEntity
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private lateinit var prioridadDb: PrioridadDb
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
         setContent {
             PrioridadesTheme {
                 val navHost = rememberNavController()
-                PrioridadesAp2NavHost(navHost, prioridadDb)
+                PrioridadesAp2NavHost(navHost)
             }
         }
     }
