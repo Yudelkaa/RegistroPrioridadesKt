@@ -50,7 +50,7 @@ class PrioridadViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(errorMessage = "Los días de compromiso deben ser mayores a cero")
                 }
-                return@launch
+
             }
 
             val isExisting = prioridadRepository.findByDescripcion(descripcion)

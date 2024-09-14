@@ -47,7 +47,6 @@ fun PrioridadBodyScreen(
 ) {
     val scope = rememberCoroutineScope()
 
-    // Mantén la referencia actual del estado UI
     val uiStateRef = rememberUpdatedState(uiState)
 
     var descripcion by remember { mutableStateOf(uiState.descripcion ?: "") }
@@ -94,6 +93,7 @@ fun PrioridadBodyScreen(
                     value = descripcion,
                     onValueChange = {
                         descripcion = it
+                        errorMessage = null
                         onEvent(PrioridadUiState.DescriptionChange(it))
                     },
                     label = { Text("Descripción") },

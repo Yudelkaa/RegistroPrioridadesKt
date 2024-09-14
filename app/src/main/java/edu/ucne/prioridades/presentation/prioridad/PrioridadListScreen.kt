@@ -90,5 +90,5 @@ fun PrioridadRow(
             textAlign = TextAlign.Center
         )
     }
-    Divider()
+   HorizontalDivider()
 }
