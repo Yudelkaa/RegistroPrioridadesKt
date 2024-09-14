@@ -22,9 +22,7 @@ import edu.ucne.prioridades.data.local.entities.PrioridadEntity
 fun PrioridadListScreen(
     viewModel: PrioridadViewModel = hiltViewModel(),
     goToPrioridad: (Int) -> Unit,
-    goToAddPrioridad: () -> Unit,
-    onEditPrioridad: () -> Unit,
-    onDeletePrioridad: () -> Unit
+    goToAddPrioridad: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val prioridades = uiState.prioridades
@@ -53,16 +51,13 @@ fun PrioridadListScreen(
                 items(prioridades) { prioridad ->
                     PrioridadRow(
                         prioridad = prioridad,
-                        goToPrioridad = { id ->
-                            goToPrioridad(id)
-                        }
+                        goToPrioridad = { id -> goToPrioridad(id) }
                     )
                 }
             }
         }
     )
 }
-
 
 @Composable
 fun PrioridadRow(

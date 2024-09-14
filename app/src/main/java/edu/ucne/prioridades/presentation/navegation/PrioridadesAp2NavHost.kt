@@ -24,12 +24,6 @@ fun PrioridadesAp2NavHost(
                 },
                 goToAddPrioridad = {
                     navHost.navigate(Screen.PrioridadScreen(0))
-                },
-                onEditPrioridad = {
-                    navHost.navigate(Screen.PrioridadScreen(0))
-                },
-                onDeletePrioridad = {
-                    navHost.navigate(Screen.PrioridadScreen(0))
                 }
             )
         }

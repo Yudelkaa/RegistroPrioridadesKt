@@ -24,20 +24,13 @@ fun PrioridadScreen(
     goBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val isEditing = inicialPrioridadId > 0
-
-    LaunchedEffect(inicialPrioridadId) {
-        if (isEditing) {
-            viewModel.onEvent(PrioridadUiState.SelectedPrioridad(inicialPrioridadId))
-        }
-    }
-
     PrioridadBodyScreen(
         uiState = uiState,
         onEvent = viewModel::onEvent,
         goBack = goBack,
         savePrioridad = { viewModel.save() },
-        isEditing = isEditing
+        inicialPrioridadId = inicialPrioridadId,
+        viewModel = viewModel
     )
 }
 
@@ -49,17 +42,28 @@ fun PrioridadBodyScreen(
     onEvent: (PrioridadUiState) -> Unit,
     goBack: () -> Unit,
     savePrioridad: () -> Unit,
-    isEditing: Boolean
+    inicialPrioridadId: Int,
+    viewModel: PrioridadViewModel
 ) {
     val scope = rememberCoroutineScope()
+
+    // Mantén la referencia actual del estado UI
+    val uiStateRef = rememberUpdatedState(uiState)
+
     var descripcion by remember { mutableStateOf(uiState.descripcion ?: "") }
     var diasCompromiso by remember { mutableStateOf(uiState.diasCompromiso?.toString() ?: "") }
     var errorMessage by remember { mutableStateOf(uiState.errorMessage) }
 
-    LaunchedEffect(uiState) {
-        descripcion = uiState.descripcion ?: ""
-        diasCompromiso = uiState.diasCompromiso?.toString() ?: ""
-        errorMessage = uiState.errorMessage
+    LaunchedEffect(inicialPrioridadId) {
+        if (inicialPrioridadId > 0) {
+            onEvent(PrioridadUiState.SelectedPrioridad(inicialPrioridadId))
+        }
+    }
+
+    LaunchedEffect(uiStateRef.value) {
+        descripcion = uiStateRef.value.descripcion ?: ""
+        diasCompromiso = uiStateRef.value.diasCompromiso?.toString() ?: ""
+        errorMessage = uiStateRef.value.errorMessage
     }
 
     // Validaciones
@@ -71,7 +75,7 @@ fun PrioridadBodyScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = if (isEditing) "Editar Prioridad" else "Nueva Prioridad") },
+                title = { Text(text = if (inicialPrioridadId == 0) "Nueva Prioridad" else "Editar Prioridad") },
                 navigationIcon = {
                     IconButton(onClick = goBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
@@ -132,14 +136,8 @@ fun PrioridadBodyScreen(
                     Button(
                         onClick = {
                             if (isValid) {
-                                scope.launch {
-                                    try {
-                                        savePrioridad()
-                                        goBack()
-                                    } catch (e: Exception) {
-                                        errorMessage = e.message
-                                    }
-                                }
+                                savePrioridad()
+                                goBack()
                             }
                         },
                         enabled = isValid
@@ -148,12 +146,12 @@ fun PrioridadBodyScreen(
                         Icon(Icons.Default.Add, contentDescription = "Add")
                     }
 
-                    if (isEditing) {
+                    if (inicialPrioridadId != 0) {
                         Button(
                             onClick = {
                                 scope.launch {
                                     try {
-                                        onEvent(PrioridadUiState.Delete)
+                                        viewModel.onEvent(PrioridadUiState.Delete)
                                         goBack()
                                     } catch (e: Exception) {
                                         errorMessage = "Error al eliminar la prioridad."

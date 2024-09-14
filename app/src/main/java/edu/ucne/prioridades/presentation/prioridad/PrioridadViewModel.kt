@@ -31,21 +31,38 @@ class PrioridadViewModel @Inject constructor(
             is PrioridadUiState.NewPrioridad -> nuevo()
             is PrioridadUiState.SelectedPrioridad -> selectedPrioridad(event.prioridadId)
             is PrioridadUiState.PrioridadIdChange -> onPrioridadIdChange(event.prioridadId)
-
-
         }
     }
 
     fun save() {
         viewModelScope.launch {
-            if (_uiState.value.descripcion.isNullOrBlank()) {
+            val descripcion = _uiState.value.descripcion
+            val diasCompromiso = _uiState.value.diasCompromiso
+
+            if (descripcion.isNullOrBlank()) {
                 _uiState.update {
-                    it.copy(errorMessage = "Campos vacíos")
+                    it.copy(errorMessage = "La descripción no puede estar vacía")
                 }
-            } else {
-                prioridadRepository.save(_uiState.value.toEntity())
-                getPrioridades()
+                return@launch
             }
+
+            if (diasCompromiso == null || diasCompromiso <= 0) {
+                _uiState.update {
+                    it.copy(errorMessage = "Los días de compromiso deben ser mayores a cero")
+                }
+                return@launch
+            }
+
+            val isExisting = prioridadRepository.findByDescripcion(descripcion)
+            if (isExisting && (_uiState.value.prioridadId == null || _uiState.value.prioridadId == 0)) {
+                _uiState.update {
+                    it.copy(errorMessage = "Ya existe una prioridad con esta descripción")
+                }
+                return@launch
+            }
+
+            prioridadRepository.save(_uiState.value.toEntity())
+            _uiState.update { it.copy(errorMessage = null) }
         }
     }
 
@@ -53,7 +70,7 @@ class PrioridadViewModel @Inject constructor(
         viewModelScope.launch {
             if (_uiState.value.prioridadId != null) {
                 prioridadRepository.delete(_uiState.value.toEntity())
-                getPrioridades() // Actualiza la lista después de eliminar
+                getPrioridades()
             } else {
                 _uiState.update {
                     it.copy(errorMessage = "ID de prioridad no válido")
