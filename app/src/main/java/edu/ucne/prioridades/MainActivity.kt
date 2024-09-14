@@ -22,11 +22,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        prioridadDb = Room.databaseBuilder(
-            applicationContext,
-            PrioridadDb :: class.java,
-            "Prioridad.db"
-        ).fallbackToDestructiveMigration().build()
+
         setContent {
             PrioridadesTheme {
                 val navHost = rememberNavController()
