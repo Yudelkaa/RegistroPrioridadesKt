@@ -17,7 +17,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.compose.ui.Alignment
-import edu.ucne.prioridades.data.repository.TicketRepository
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,12 +60,13 @@ fun TicketScreen(
                 uiState = uiState,
                 goBack = goBack,
                 saveTicket = { viewModel.save() },
-                deleteTicket = { viewModel.deleteTicket() },
+                deleteTicket = { viewModel.deleteTicket(ticketId) },
                 ticketId = ticketId
             )
         }
     }
 }
+
 @Composable
 fun TicketBodyScreen(
     uiState: TicketUiState,
@@ -103,7 +103,6 @@ fun TicketBodyScreen(
                 fontSize = 14.sp
             )
         }
-
 
         OutlinedTextField(
             value = uiState.asunto ?: "",

@@ -23,18 +23,18 @@ class TicketViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(TicketUiState())
     val uiState = _uiState.asStateFlow()
 
-    private var ticketId: Int = 0
+    private var ticketId: Int? = null
 
     fun setTicketId(id: Int) {
         ticketId = id
-        if (ticketId > 0) {
+        if (ticketId!! > 0) {
             loadTicket()
         }
     }
 
     fun loadTicket() {
         viewModelScope.launch {
-            val ticket = ticketRepository.getTicket(ticketId)
+            val ticket = ticketId?.let { ticketRepository.getTicket(it) }
             ticket?.let {
                 _uiState.update { currentUiState ->
                     currentUiState.copy(
@@ -103,24 +103,26 @@ class TicketViewModel @Inject constructor(
     }
 
 
-
-    fun deleteTicket() {
+    fun deleteTicket(ticketId: Int) {
         viewModelScope.launch {
-            ticketRepository.deleteTicket(TicketEntity(ticketId))
-            _uiState.update { it.copy(ticketId = ticketId )}
+            ticketRepository.deleteTicket(TicketEntity(this@TicketViewModel.ticketId))
+            _uiState.update { it.copy(ticketId = this@TicketViewModel.ticketId)}
         }
     }
 
     fun save() {
         viewModelScope.launch {
-            ticketRepository.save(uiState.value.toEntity())
+            val currentTicket = uiState.value.toEntity()
+            if (currentTicket.ticketId == 0) {
+                ticketRepository.save(currentTicket)
+
+            }
         }
     }
 
-
 }
 data class TicketUiState(
-    val ticketId: Int? = 0,
+    val ticketId: Int? = null,
     val descripcion: String? = null,
     val asunto: String? = null,
     val cliente: String? = null,
@@ -134,11 +136,11 @@ data class TicketUiState(
 
 fun TicketUiState.toEntity(): TicketEntity {
     return TicketEntity(
-        ticketId = this.ticketId ?: 0,
+        ticketId = this.ticketId,
         fecha = this.fecha.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")),
         descripcion = this.descripcion ?: "",
         asunto = this.asunto ?: "",
         cliente = this.cliente ?: "",
-        prioridadId = this.prioridadId ?: 0
+        prioridadId = this.prioridadId
     )
 }

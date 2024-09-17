@@ -16,7 +16,7 @@ import edu.ucne.prioridades.data.local.entities.TicketEntity
     ],
 
 
-    version = 6,
+    version = 8,
     exportSchema = false
 )
 abstract class PrioridadDb : RoomDatabase() {

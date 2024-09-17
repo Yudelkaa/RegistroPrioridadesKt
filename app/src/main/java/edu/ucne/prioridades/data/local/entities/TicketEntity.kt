@@ -4,17 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 
-@Entity(
-    tableName = "Tickets",
-    foreignKeys = [
-        ForeignKey(
-            entity = PrioridadEntity::class,
-            parentColumns = ["prioridadId"],
-            childColumns = ["prioridadId"],
-            onDelete = ForeignKey.CASCADE
-        )
-    ]
-)
+@Entity(tableName = "Tickets")
 data class TicketEntity(
     @PrimaryKey(autoGenerate = true)
     val ticketId: Int? = null,

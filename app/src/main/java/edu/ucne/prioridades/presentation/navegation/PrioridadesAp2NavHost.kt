@@ -76,12 +76,7 @@ fun PrioridadesAp2NavHost(
                    scope.launch {
                        drawerState.open()
                    }
-               },
-               onNavigateToPrioridades = { navHost.navigate(Screen.PrioridadesListScreen) },
-               onNavigateToTickets = { navHost.navigate(Screen.TicketListScreen) },
-               prioridadRepository = prioridadRepository,
-               ticketRepository = ticketRepository,
-               navHost = navHost
+               }
 
            )
         }

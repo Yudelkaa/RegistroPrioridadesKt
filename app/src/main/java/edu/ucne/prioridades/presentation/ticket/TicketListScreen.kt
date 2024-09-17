@@ -6,36 +6,52 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
 import edu.ucne.prioridades.data.local.entities.TicketEntity
-import edu.ucne.prioridades.data.repository.PrioridadRepository
-import edu.ucne.prioridades.data.repository.TicketRepository
-import java.time.format.DateTimeFormatter
+import edu.ucne.prioridades.data.local.entities.PrioridadEntity
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TicketListScreen(
     viewModel: TicketViewModel = hiltViewModel(),
     goToTicket: (Int) -> Unit,
     openDrawer: () -> Unit,
-    onNavigateToPrioridades: () -> Unit,
-    onNavigateToTickets: () -> Unit,
-    prioridadRepository: PrioridadRepository,
-    ticketRepository: TicketRepository,
-    navHost: NavHostController
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    val tickets by viewModel.ticket.collectAsStateWithLifecycle()
+    val prioridad by viewModel.prioridad.collectAsStateWithLifecycle()
+
+    TicketListBody(
+        tickets = tickets,
+        prioridad = prioridad,
+        openDrawer = openDrawer,
+        goToTicket = goToTicket,
+        onDeleteTicket = { ticketId ->
+            if (ticketId > 0) {
+                viewModel.deleteTicket(ticketId)
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TicketListBody(
+    tickets: List<TicketEntity>,
+    prioridad: List<PrioridadEntity>,
+    openDrawer: () -> Unit,
+    goToTicket: (Int) -> Unit,
+    onDeleteTicket: (Int) -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -48,120 +64,59 @@ fun TicketListScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { goToTicket(0) },
-                modifier = Modifier.padding(16.dp)
-            ) {
+            FloatingActionButton(onClick = { goToTicket(-1) }) {
                 Icon(Icons.Default.Add, contentDescription = "Añadir Ticket")
             }
         },
         content = { paddingValues ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(16.dp)
-            ) {
-                item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        Text(
-                            modifier = Modifier.weight(3f),
-                            text = "Descripción",
-                            style = MaterialTheme.typography.titleMedium,
-                            textAlign = TextAlign.Center
-                        )
+            Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Descripción", modifier = Modifier.weight(0.35f))
+                    Text("Cliente", modifier = Modifier.weight(0.30f))
+                    Text("Prioridad", modifier = Modifier.weight(0.25f))
+                    Text("Asunto", modifier = Modifier.weight(0.25f))
+                    Text("Fecha", modifier = Modifier.weight(0.25f))
+                }
+                Divider()
 
-                        Text(
-                            modifier = Modifier.weight(1f),
-                            text = "ID",
-                            style = MaterialTheme.typography.titleMedium,
-                            textAlign = TextAlign.Center
-                        )
-
-                        Text(
-                            modifier = Modifier.weight(2f),
-                            text = "Asunto",
-                            style = MaterialTheme.typography.titleMedium,
-                            textAlign = TextAlign.Center
-                        )
-                        Text(
-                            modifier = Modifier.weight(2f),
-                            text = "Cliente",
-                            style = MaterialTheme.typography.titleMedium,
-                            textAlign = TextAlign.Center
-                        )
-                        Text(
-                            modifier = Modifier.weight(1f),
-                            text = "PrioridadId",
-                            style = MaterialTheme.typography.titleMedium,
-                            textAlign = TextAlign.Center
-                        )
-                        Text(
-                            modifier = Modifier.weight(2f),
-                            text = "Fecha",
-                            style = MaterialTheme.typography.titleMedium,
-                            textAlign = TextAlign.Center
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(tickets) { ticket ->
+                        TicketRow(
+                            ticket = ticket,
+                            onClick = { ticket.ticketId?.let { goToTicket(it) } },
+                            onDelete = { ticket.ticketId?.let { onDeleteTicket(it) } }
                         )
                     }
-                }
-
-                items(uiState.tickets) { ticket ->
-                    TicketRow(ticket, onDelete = {})
                 }
             }
         }
     )
 }
+
 @Composable
 fun TicketRow(
     ticket: TicketEntity,
-    onDelete: (Int) -> Unit
+    onClick: () -> Unit,
+    onDelete: () -> Unit
 ) {
     Row(
-        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp)
-            .clickable { onDelete(ticket.ticketId!!) } // Aquí se elimina directamente al hacer clic
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            modifier = Modifier.weight(3f),
-            text = ticket.descripcion ?: "",
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
-        )
-        Text(
-            modifier = Modifier.weight(1f),
-            text = ticket.ticketId.toString(),
-            textAlign = TextAlign.Center
-        )
-        Text(
-            modifier = Modifier.weight(2f),
-            text = ticket.asunto ?: "",
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
-        )
-        Text(
-            modifier = Modifier.weight(2f),
-            text = ticket.cliente ?: "",
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
-        )
-        Text(
-            modifier = Modifier.weight(1f),
-            text = ticket.prioridadId.toString(),
-            textAlign = TextAlign.Center
-        )
-        Text(
-            modifier = Modifier.weight(2f),
-            text = ticket.fecha?.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")) ?: "",
-            textAlign = TextAlign.Center
-        )
+        Text(text = ticket.descripcion ?: "", modifier = Modifier.weight(0.35f))
+        Text(text = ticket.cliente ?: "", modifier = Modifier.weight(0.30f))
+        Text(text = ticket.prioridadId.toString(), modifier = Modifier.weight(0.25f))
+        Text(text = ticket.asunto ?: "", modifier = Modifier.weight(0.25f))
+        Text(text = ticket.fecha.toString(), modifier = Modifier.weight(0.25f))
+        Spacer(modifier = Modifier.weight(0.1f))
+        IconButton(onClick = { onDelete() }) {
+            Icon(Icons.Default.Delete, contentDescription = "Eliminar Ticket")
+        }
     }
 }
-
