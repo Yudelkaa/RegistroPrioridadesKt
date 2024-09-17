@@ -7,7 +7,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import edu.ucne.prioridades.data.local.dao.PrioridadDao
 import edu.ucne.prioridades.data.local.database.PrioridadDb
 import javax.inject.Singleton
 
@@ -28,4 +27,9 @@ object AppModule {
     @Singleton
     fun providePrioridadDao(prioridadDb: PrioridadDb) =
         prioridadDb.prioridadDao()
+
+    @Provides
+    @Singleton
+    fun provideTicketDao(prioridadDb: PrioridadDb) =
+        prioridadDb.ticketDao()
 }
