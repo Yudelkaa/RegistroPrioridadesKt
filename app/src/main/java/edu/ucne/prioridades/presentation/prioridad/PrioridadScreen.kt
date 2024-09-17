@@ -1,5 +1,3 @@
-package edu.ucne.prioridades.presentation.prioridad
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -11,34 +9,60 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import edu.ucne.prioridades.data.local.dao.PrioridadDao
-import edu.ucne.prioridades.data.local.database.PrioridadDb
-import edu.ucne.prioridades.data.local.entities.PrioridadEntity
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import edu.ucne.prioridades.presentation.prioridad.PrioridadUiState
+import edu.ucne.prioridades.presentation.prioridad.PrioridadViewModel
+import edu.ucne.prioridades.presentation.prioridad.UiState
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrioridadScreen(
+    viewModel: PrioridadViewModel = hiltViewModel(),
     inicialPrioridadId: Int,
-    prioridadDb: PrioridadDb,
     goBack: () -> Unit
 ) {
-    val dao = prioridadDb.prioridadDao()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    PrioridadBodyScreen(
+        uiState = uiState,
+        onEvent = viewModel::onEvent,
+        goBack = goBack,
+        savePrioridad = { viewModel.save() },
+        inicialPrioridadId = inicialPrioridadId,
+        viewModel = viewModel
+    )
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PrioridadBodyScreen(
+    uiState: UiState,
+    onEvent: (PrioridadUiState) -> Unit,
+    goBack: () -> Unit,
+    savePrioridad: () -> Unit,
+    inicialPrioridadId: Int,
+    viewModel: PrioridadViewModel
+) {
     val scope = rememberCoroutineScope()
 
-    val prioridadId by remember { mutableIntStateOf(inicialPrioridadId) }
-    var descripcion by remember { mutableStateOf("") }
-    var diasCompromiso by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val uiStateRef = rememberUpdatedState(uiState)
 
-    LaunchedEffect(prioridadId) {
-        if (prioridadId != 0) {
-            val prioridad = dao.find(prioridadId)
-            if (prioridad != null) {
-                descripcion = prioridad.descripcion
-                diasCompromiso = prioridad.diasCompromiso?.toString() ?: ""
-            }
+    var descripcion by remember { mutableStateOf(uiState.descripcion ?: "") }
+    var diasCompromiso by remember { mutableStateOf(uiState.diasCompromiso?.toString() ?: "") }
+    var errorMessage by remember { mutableStateOf(uiState.errorMessage) }
+
+    LaunchedEffect(inicialPrioridadId) {
+        if (inicialPrioridadId > 0) {
+            onEvent(PrioridadUiState.SelectedPrioridad(inicialPrioridadId))
         }
+    }
+
+    LaunchedEffect(uiStateRef.value) {
+        descripcion = uiStateRef.value.descripcion ?: ""
+        diasCompromiso = uiStateRef.value.diasCompromiso?.toString() ?: ""
+        errorMessage = uiStateRef.value.errorMessage
     }
 
     // Validaciones
@@ -50,7 +74,7 @@ fun PrioridadScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = if (prioridadId == 0) "Nueva Prioridad" else "Editar Prioridad") },
+                title = { Text(text = if (inicialPrioridadId == 0) "Nueva Prioridad" else "Editar Prioridad") },
                 navigationIcon = {
                     IconButton(onClick = goBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
@@ -67,7 +91,11 @@ fun PrioridadScreen(
             ) {
                 OutlinedTextField(
                     value = descripcion,
-                    onValueChange = { descripcion = it },
+                    onValueChange = {
+                        descripcion = it
+                        errorMessage = null
+                        onEvent(PrioridadUiState.DescriptionChange(it))
+                    },
                     label = { Text("Descripción") },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -76,7 +104,16 @@ fun PrioridadScreen(
 
                 OutlinedTextField(
                     value = diasCompromiso,
-                    onValueChange = { diasCompromiso = it },
+                    onValueChange = {
+                        diasCompromiso = it
+                        val dias = it.toIntOrNull()
+                        if (dias != null) {
+                            onEvent(PrioridadUiState.DaysChange(dias))
+                            errorMessage = null
+                        } else {
+                            errorMessage = "Días inválidos"
+                        }
+                    },
                     label = { Text("Días de Compromiso") },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
@@ -99,19 +136,8 @@ fun PrioridadScreen(
                     Button(
                         onClick = {
                             if (isValid) {
-                                scope.launch {
-                                    try {
-                                        val prioridad = PrioridadEntity(
-                                            prioridadId = if (prioridadId == 0) null else prioridadId,
-                                            descripcion = descripcion,
-                                            diasCompromiso = diasCompromisoInt
-                                        )
-                                        guardarPrioridad(dao, prioridad)
-                                        goBack()
-                                    } catch (e: Exception) {
-                                        errorMessage = e.message
-                                    }
-                                }
+                                savePrioridad()
+                                goBack()
                             }
                         },
                         enabled = isValid
@@ -120,12 +146,12 @@ fun PrioridadScreen(
                         Icon(Icons.Default.Add, contentDescription = "Add")
                     }
 
-                    if (prioridadId != 0) {
+                    if (inicialPrioridadId != 0) {
                         Button(
                             onClick = {
                                 scope.launch {
                                     try {
-                                        dao.delete(PrioridadEntity(prioridadId = prioridadId))
+                                        viewModel.onEvent(PrioridadUiState.Delete)
                                         goBack()
                                     } catch (e: Exception) {
                                         errorMessage = "Error al eliminar la prioridad."
@@ -142,18 +168,4 @@ fun PrioridadScreen(
             }
         }
     )
-}
-
-suspend fun guardarPrioridad(dao: PrioridadDao, prioridad: PrioridadEntity) {
-    if (prioridad.descripcion.isBlank()) {
-        throw IllegalArgumentException("Favor ingresar la descripción")
-    }
-    if (prioridad.diasCompromiso == null || prioridad.diasCompromiso!! <= 0) {
-        throw IllegalArgumentException("No ingresar cero ni dígitos menores que cero")
-    }
-    val existePrioridad = dao.findByDescripcion(prioridad.descripcion)
-    if (existePrioridad != null && existePrioridad.prioridadId != prioridad.prioridadId) {
-        throw IllegalArgumentException("Ya existe una prioridad con esta descripción")
-    }
-    dao.save(prioridad)
 }
