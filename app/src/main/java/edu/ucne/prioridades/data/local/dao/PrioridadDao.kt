@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PrioridadDao {
-    @Upsert()
+    @Upsert
     suspend fun save(prioridad: PrioridadEntity)
 
     @Query(

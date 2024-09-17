@@ -5,8 +5,8 @@ sealed class PrioridadUiState {
     data class DaysChange(val diasCompromiso: Int) : PrioridadUiState()
     data class PrioridadIdChange(val prioridadId: Int) : PrioridadUiState()
     data class SelectedPrioridad(val prioridadId: Int) : PrioridadUiState()
-    object NewPrioridad : PrioridadUiState()
-    object save : PrioridadUiState()
-    object Delete : PrioridadUiState()
+    data object NewPrioridad : PrioridadUiState()
+    data object Save : PrioridadUiState()
+    data object Delete : PrioridadUiState()
+    }
 
-}

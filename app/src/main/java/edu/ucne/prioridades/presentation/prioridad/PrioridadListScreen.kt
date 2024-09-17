@@ -16,13 +16,19 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.ucne.prioridades.data.local.entities.PrioridadEntity
+import edu.ucne.prioridades.data.repository.PrioridadRepository
+import edu.ucne.prioridades.data.repository.TicketRepository
+import edu.ucne.prioridades.presentation.TopAppBar
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrioridadListScreen(
     viewModel: PrioridadViewModel = hiltViewModel(),
     goToPrioridad: (Int) -> Unit,
-    goToAddPrioridad: () -> Unit
+    openDrawer: () -> Unit,
+    onNavigateToPrioridades: () -> Unit,
+    onNavigateToTickets: () -> Unit,
+    prioridadRepository: PrioridadRepository,
+    ticketRepository: TicketRepository
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val prioridades = uiState.prioridades
@@ -30,12 +36,13 @@ fun PrioridadListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Lista de Prioridades") }
+                title = "Lista de Prioridades",
+                onMenuClick = openDrawer
             )
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = goToAddPrioridad,
+                onClick = { goToPrioridad(0) },
                 modifier = Modifier.padding(16.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Añadir Prioridad")
@@ -48,10 +55,10 @@ fun PrioridadListScreen(
                     .padding(paddingValues),
                 contentPadding = PaddingValues(16.dp)
             ) {
-                items(prioridades) { prioridad ->
+                items(uiState.prioridades) { prioridad ->
                     PrioridadRow(
-                        prioridad = prioridad,
-                        goToPrioridad = { id -> goToPrioridad(id) }
+                        prioridad,
+                        goToPrioridad
                     )
                 }
             }

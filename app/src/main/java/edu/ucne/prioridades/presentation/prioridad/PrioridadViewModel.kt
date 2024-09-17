@@ -23,11 +23,11 @@ class PrioridadViewModel @Inject constructor(
     }
 
     fun onEvent(event: PrioridadUiState) {
-        when(event) {
+        when (event) {
             is PrioridadUiState.Delete -> delete()
             is PrioridadUiState.DescriptionChange -> onDescriptionChange(event.descripcion)
             is PrioridadUiState.DaysChange -> onDaysChange(event.diasCompromiso)
-            is PrioridadUiState.save -> save()
+            is PrioridadUiState.Save -> save()
             is PrioridadUiState.NewPrioridad -> nuevo()
             is PrioridadUiState.SelectedPrioridad -> selectedPrioridad(event.prioridadId)
             is PrioridadUiState.PrioridadIdChange -> onPrioridadIdChange(event.prioridadId)
@@ -50,7 +50,7 @@ class PrioridadViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(errorMessage = "Los días de compromiso deben ser mayores a cero")
                 }
-
+                return@launch
             }
 
             val isExisting = prioridadRepository.findByDescripcion(descripcion)
@@ -141,10 +141,21 @@ data class UiState(
     val diasCompromiso: Int? = null,
     val errorMessage: String? = null,
     val prioridades: List<PrioridadEntity> = emptyList()
-)
+) {
+
+    val hasError: Boolean
+        get() = errorMessage != null
+
+    val selectedPrioridadId: Int?
+        get() = prioridadId
+
+    val prioridadOptions: List<PrioridadEntity>
+        get() = prioridades
+}
 
 fun UiState.toEntity() = PrioridadEntity(
     prioridadId = prioridadId,
     descripcion = descripcion ?: "",
     diasCompromiso = diasCompromiso
 )
+

@@ -1,9 +1,11 @@
 package edu.ucne.prioridades.data.repository
 
 import edu.ucne.prioridades.data.local.dao.PrioridadDao
-import edu.ucne.prioridades.data.local.database.PrioridadDb
 import edu.ucne.prioridades.data.local.entities.PrioridadEntity
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+
 
 class PrioridadRepository @Inject constructor(
     private val prioridadDao: PrioridadDao
@@ -15,4 +17,5 @@ class PrioridadRepository @Inject constructor(
     suspend fun findByDescripcion(descripcion: String): Boolean {
         return prioridadDao.findByDescripcion(descripcion) != null
     }
+
 }

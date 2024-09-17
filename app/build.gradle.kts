@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "edu.ucne.prioridades"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -60,6 +60,8 @@ dependencies {
     implementation(libs.androidx.material3)
 
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.4")
+    implementation("androidx.compose.material3:material3:1.3.0")
+
 
     //navegacion
     implementation("androidx.navigation:navigation-compose:2.8.0-rc01")
@@ -67,6 +69,8 @@ dependencies {
 
     //room
     implementation("androidx.room:room-runtime:2.6.1")
+    implementation(libs.androidx.benchmark.common)
+    implementation(libs.androidx.core.i18n)
     annotationProcessor("androidx.room:room-compiler:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
     //  optional - Kotlin Extensions and Coroutines support for Room
