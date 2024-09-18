@@ -18,6 +18,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.ucne.prioridades.data.local.entities.TicketEntity
 import edu.ucne.prioridades.data.local.entities.PrioridadEntity
+import edu.ucne.prioridades.data.repository.PrioridadRepository
+import edu.ucne.prioridades.data.repository.TicketRepository
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,8 +27,11 @@ fun TicketListScreen(
     viewModel: TicketViewModel = hiltViewModel(),
     goToTicket: (Int) -> Unit,
     openDrawer: () -> Unit,
+    onNavigateToPrioridades: () -> Unit,
+    onNavigateToTickets: () -> Unit,
+    prioridadRepository: PrioridadRepository,
+    ticketRepository: TicketRepository,
 ) {
-
     val tickets by viewModel.ticket.collectAsStateWithLifecycle()
     val prioridad by viewModel.prioridad.collectAsStateWithLifecycle()
 
@@ -37,7 +42,7 @@ fun TicketListScreen(
         goToTicket = goToTicket,
         onDeleteTicket = { ticketId ->
             if (ticketId > 0) {
-                viewModel.deleteTicket(ticketId)
+                viewModel.delete(ticketId)
             }
         }
     )
@@ -86,8 +91,7 @@ fun TicketListBody(
                     items(tickets) { ticket ->
                         TicketRow(
                             ticket = ticket,
-                            onClick = { ticket.ticketId?.let { goToTicket(it) } },
-                            onDelete = { ticket.ticketId?.let { onDeleteTicket(it) } }
+                            onClick = { ticket.ticketId?.let { goToTicket(it) } }
                         )
                     }
                 }
@@ -100,7 +104,7 @@ fun TicketListBody(
 fun TicketRow(
     ticket: TicketEntity,
     onClick: () -> Unit,
-    onDelete: () -> Unit
+
 ) {
     Row(
         modifier = Modifier
@@ -113,10 +117,8 @@ fun TicketRow(
         Text(text = ticket.cliente ?: "", modifier = Modifier.weight(0.30f))
         Text(text = ticket.prioridadId.toString(), modifier = Modifier.weight(0.25f))
         Text(text = ticket.asunto ?: "", modifier = Modifier.weight(0.25f))
-        Text(text = ticket.fecha.toString(), modifier = Modifier.weight(0.25f))
+        ticket.fecha?.let { Text(text = it, modifier = Modifier.weight(0.25f)) }
         Spacer(modifier = Modifier.weight(0.1f))
-        IconButton(onClick = { onDelete() }) {
-            Icon(Icons.Default.Delete, contentDescription = "Eliminar Ticket")
-        }
+
     }
 }

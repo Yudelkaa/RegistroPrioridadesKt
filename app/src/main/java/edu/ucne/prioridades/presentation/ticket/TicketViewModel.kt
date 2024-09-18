@@ -15,19 +15,33 @@ import kotlinx.coroutines.flow.stateIn
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+
 @HiltViewModel
 class TicketViewModel @Inject constructor(
     private val ticketRepository: TicketRepository,
     private val prioridadRepository: PrioridadRepository
 ) : ViewModel() {
+
     private val _uiState = MutableStateFlow(TicketUiState())
     val uiState = _uiState.asStateFlow()
 
     private var ticketId: Int? = null
 
-    fun setTicketId(id: Int) {
-        ticketId = id
-        if (ticketId!! > 0) {
+    fun setTicketId(id: Int?) {
+        if (id == null || id == 0) {
+            // Reset UI state for a new ticket
+            _uiState.update {
+                it.copy(
+                    ticketId = 0,
+                    descripcion = "",
+                    asunto = "",
+                    cliente = "",
+                    fecha = LocalDate.now(),
+                    prioridadId = 0
+                )
+            }
+        } else {
+            ticketId = id
             loadTicket()
         }
     }
@@ -38,18 +52,17 @@ class TicketViewModel @Inject constructor(
             ticket?.let {
                 _uiState.update { currentUiState ->
                     currentUiState.copy(
-                        ticketId = ticket.ticketId,
-                        fecha = LocalDate.parse(ticket.fecha, DateTimeFormatter.ofPattern("MM/dd/yyyy")),
-                        prioridadId = ticket.prioridadId,
-                        descripcion = ticket.descripcion ?: "",
-                        asunto = ticket.asunto ?: "",
-                        cliente = ticket.cliente ?: ""
+                        ticketId = it.ticketId,
+                        fecha = LocalDate.parse(it.fecha, DateTimeFormatter.ofPattern("MM/dd/yyyy")),
+                        prioridadId = it.prioridadId ?: 0,
+                        descripcion = it.descripcion,
+                        asunto = it.asunto,
+                        cliente = it.cliente
                     )
                 }
             }
         }
     }
-
 
     fun onDescripcionChange(descripcion: String) {
         _uiState.update { it.copy(descripcion = descripcion) }
@@ -64,11 +77,8 @@ class TicketViewModel @Inject constructor(
     }
 
     fun onFechaChange(fecha: LocalDate) {
-        _uiState.update {
-            it.copy(fecha = fecha)
-        }
+        _uiState.update { it.copy(fecha = fecha) }
     }
-
 
     val prioridad = prioridadRepository.getPrioridades()
         .stateIn(
@@ -87,60 +97,85 @@ class TicketViewModel @Inject constructor(
     fun validateTicket(): Boolean {
         val currentState = _uiState.value
         var isValid = true
-        if (currentState.descripcion.isNullOrBlank()) {
+        if (currentState.descripcion.isBlank()) {
             _uiState.update { it.copy(descripcionError = "La descripción no puede estar vacía") }
             isValid = false
         }
-        if (currentState.asunto.isNullOrBlank()) {
+        if (currentState.asunto.isBlank()) {
             _uiState.update { it.copy(asuntoError = "El asunto no puede estar vacío") }
             isValid = false
         }
-        if (currentState.cliente.isNullOrBlank()) {
+        if (currentState.cliente.isBlank()) {
             _uiState.update { it.copy(clienteError = "El cliente no puede estar vacío") }
             isValid = false
         }
         return isValid
     }
 
-
-    fun deleteTicket(ticketId: Int) {
+    // Método para borrar un ticket
+    fun delete(ticketId: Int) {
         viewModelScope.launch {
-            ticketRepository.deleteTicket(TicketEntity(this@TicketViewModel.ticketId))
-            _uiState.update { it.copy(ticketId = this@TicketViewModel.ticketId)}
-        }
-    }
-
-    fun save() {
-        viewModelScope.launch {
-            val currentTicket = uiState.value.toEntity()
-            if (currentTicket.ticketId == 0) {
-                ticketRepository.save(currentTicket)
-
+            val currentTicketId = _uiState.value.ticketId
+            if (currentTicketId != 0) {
+                val ticket = ticketRepository.getTicket(currentTicketId)
+                ticket?.let {
+                    ticketRepository.deleteTicket(it)
+                    _uiState.update { it.copy(errorMessage = null) } // Reset error message
+                }
+            } else {
+                _uiState.update { it.copy(errorMessage = "ID de ticket no válido") }
             }
         }
     }
 
-}
-data class TicketUiState(
-    val ticketId: Int? = null,
-    val descripcion: String? = null,
-    val asunto: String? = null,
-    val cliente: String? = null,
-    var fecha: LocalDate = LocalDate.now(),
-    val descripcionError: String? = null,
-    val asuntoError: String? = null,
-    val clienteError: String? = null,
-    val tickets: List<TicketEntity> = emptyList(),
-    val prioridadId: Int? = null
-)
 
-fun TicketUiState.toEntity(): TicketEntity {
-    return TicketEntity(
-        ticketId = this.ticketId,
-        fecha = this.fecha.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")),
-        descripcion = this.descripcion ?: "",
-        asunto = this.asunto ?: "",
-        cliente = this.cliente ?: "",
-        prioridadId = this.prioridadId
-    )
+    fun save() {
+        viewModelScope.launch {
+            val descripcion = _uiState.value.descripcion
+            val asunto = _uiState.value.asunto
+            val cliente = _uiState.value.cliente
+            val prioridadId = _uiState.value.prioridadId
+
+            if (!validateTicket()) return@launch
+
+
+            val isExisting = ticketRepository.findByDescripcion(descripcion)
+            if (isExisting && (_uiState.value.ticketId == 0)) {
+                _uiState.update { it.copy(errorMessage = "Ya existe un ticket con esta descripción") }
+                return@launch
+            }
+
+
+            ticketRepository.save(_uiState.value.toEntity())
+            _uiState.update { it.copy(errorMessage = null) }
+        }
+    }
+
+    data class TicketUiState(
+        val ticketId: Int = 0,
+        val descripcion: String = "",
+        val asunto: String = "",
+        val cliente: String = "",
+        var fecha: LocalDate = LocalDate.now(),
+        val descripcionError: String? = null,
+        val asuntoError: String? = null,
+        val clienteError: String? = null,
+        val tickets: List<TicketEntity> = emptyList(),
+        val prioridadId: Int = 0,
+        val errorMessage: String? = null
+    ) {
+        val hasError: Boolean
+            get() = descripcionError != null || asuntoError != null || clienteError != null
+    }
+
+    fun TicketUiState.toEntity(): TicketEntity {
+        return TicketEntity(
+            ticketId = ticketId,
+            fecha = fecha.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")),
+            descripcion = descripcion,
+            asunto = asunto,
+            cliente = cliente,
+            prioridadId = prioridadId
+        )
+    }
 }

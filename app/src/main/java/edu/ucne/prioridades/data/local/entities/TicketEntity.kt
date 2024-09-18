@@ -7,12 +7,11 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "Tickets")
 data class TicketEntity(
     @PrimaryKey(autoGenerate = true)
-    val ticketId: Int? = null,
+    val ticketId: Int = 0,
     val cliente: String = "",
     val asunto: String = "",
-    var descripcion: String? = "",
+    var descripcion: String = "",
     val fecha: String? = "",
     val prioridadId: Int? = null
 )
-
 

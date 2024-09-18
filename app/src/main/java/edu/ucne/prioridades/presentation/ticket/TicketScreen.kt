@@ -18,7 +18,6 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.compose.ui.Alignment
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TicketScreen(
@@ -60,16 +59,15 @@ fun TicketScreen(
                 uiState = uiState,
                 goBack = goBack,
                 saveTicket = { viewModel.save() },
-                deleteTicket = { viewModel.deleteTicket(ticketId) },
+                deleteTicket = { viewModel.delete(ticketId) },
                 ticketId = ticketId
             )
         }
     }
 }
-
 @Composable
 fun TicketBodyScreen(
-    uiState: TicketUiState,
+    uiState: TicketViewModel.TicketUiState,
     goBack: () -> Unit,
     saveTicket: () -> Unit,
     deleteTicket: () -> Unit,
@@ -172,33 +170,30 @@ fun TicketBodyScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+        Button(
+            onClick = {
+                if (viewModel.validateTicket()) {
+                    saveTicket()
+                    goBack()
+                }
+            },
+            enabled = viewModel.validateTicket()
         ) {
+            Icon(Icons.Filled.Done, contentDescription = "Save Ticket")
+            Text(text = "Guardar")
+        }
+
+        if (ticketId > 0) {
             Button(
                 onClick = {
-                    if (viewModel.validateTicket()) {
-                        saveTicket()
-                        goBack()
-                    }
-                }
+                    deleteTicket()
+                    goBack()
+                },
+                colors = ButtonDefaults.buttonColors(Color.Red),
+                enabled = ticketId > 0
             ) {
-                Icon(Icons.Filled.Done, contentDescription = "Save Ticket")
-                Text(text = "Guardar")
-            }
-
-            if (ticketId > 0) {
-                Button(
-                    onClick = {
-                        deleteTicket()
-                        goBack()
-                    },
-                    colors = ButtonDefaults.buttonColors(Color.Red)
-                ) {
-                    Icon(Icons.Filled.Delete, contentDescription = "Delete Ticket")
-                    Text(text = "Borrar")
-                }
+                Icon(Icons.Filled.Delete, contentDescription = "Delete Ticket")
+                Text(text = "Borrar")
             }
         }
     }
