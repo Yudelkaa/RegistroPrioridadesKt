@@ -13,15 +13,15 @@ import edu.ucne.prioridades.presentation.navegation.PrioridadesAp2NavHost
 import edu.ucne.prioridades.presentation.navegation.Screen
 import edu.ucne.prioridades.ui.theme.PrioridadesTheme
 import edu.ucne.prioridades.data.repository.PrioridadRepository
+import edu.ucne.prioridades.data.repository.SistemaRepository
 import edu.ucne.prioridades.data.repository.TicketRepository
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
-     @Inject lateinit var prioridadRepository: PrioridadRepository
+    @Inject lateinit var prioridadRepository: PrioridadRepository
     @Inject lateinit var ticketRepository: TicketRepository
-
+    @Inject lateinit var sistemaRepository: SistemaRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +35,7 @@ class MainActivity : ComponentActivity() {
                 NavigationDrawer(
                     navPrioridadList = { navHost.navigate(Screen.PrioridadesListScreen) },
                     navTicketList = { navHost.navigate(Screen.TicketListScreen) },
+                    navSistemaList = {navHost.navigate(Screen.SistemaListScreen)},
                     drawerState = drawerState
                 ) {
                     PrioridadesAp2NavHost(
@@ -42,8 +43,8 @@ class MainActivity : ComponentActivity() {
                         prioridadRepository = prioridadRepository,
                         scope = scope,
                         drawerState = drawerState,
-                        ticketRepository = ticketRepository
-
+                        ticketRepository = ticketRepository,
+                        sistemaRepository = sistemaRepository
                     )
                 }
             }
