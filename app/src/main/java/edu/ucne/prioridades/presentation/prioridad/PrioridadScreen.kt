@@ -24,6 +24,7 @@ fun PrioridadScreen(
     onNavigateToPrioridades: () -> Unit,
     openDrawer: () -> Unit,
     prioridadId: Int,
+    onNavigateToSistemas: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 

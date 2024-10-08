@@ -28,7 +28,8 @@ fun PrioridadListScreen(
     onNavigateToPrioridades: () -> Unit,
     onNavigateToTickets: () -> Unit,
     prioridadRepository: PrioridadRepository,
-    ticketRepository: TicketRepository
+    ticketRepository: TicketRepository,
+    onNavigateToSistemas: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val prioridades = uiState.prioridades

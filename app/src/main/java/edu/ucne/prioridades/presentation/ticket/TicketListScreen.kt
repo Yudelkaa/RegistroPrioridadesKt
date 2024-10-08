@@ -6,7 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -19,6 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.ucne.prioridades.data.local.entities.TicketEntity
 import edu.ucne.prioridades.data.local.entities.PrioridadEntity
 import edu.ucne.prioridades.data.repository.PrioridadRepository
+import edu.ucne.prioridades.data.repository.SistemaRepository
 import edu.ucne.prioridades.data.repository.TicketRepository
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,6 +31,8 @@ fun TicketListScreen(
     onNavigateToTickets: () -> Unit,
     prioridadRepository: PrioridadRepository,
     ticketRepository: TicketRepository,
+    sistemaRepository: SistemaRepository,
+    onNavigateToSistemas: () -> Unit,
 ) {
     val tickets by viewModel.ticket.collectAsStateWithLifecycle()
     val prioridad by viewModel.prioridad.collectAsStateWithLifecycle()

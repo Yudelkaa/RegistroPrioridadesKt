@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,6 +29,7 @@ fun NavigationDrawer(
     drawerState: DrawerState,
     navPrioridadList: () -> Unit,
     navTicketList: () -> Unit,
+    navSistemaList: () -> Unit,
     content: @Composable () -> Unit
 ) {
     val scope = rememberCoroutineScope()
@@ -40,7 +43,13 @@ fun NavigationDrawer(
             title = "Tickets",
             selectedIcon = Icons.Filled.Email,
             unselectedIcon = Icons.Outlined.Email
-        )
+        ),
+        NavigationItem(
+            title = "Sistemas",
+            selectedIcon = Icons.Filled.Favorite,
+            unselectedIcon = Icons.Outlined.Favorite
+        ),
+
     )
     val selectedItem = remember { mutableStateOf(items[0]) }
 
@@ -70,6 +79,7 @@ fun NavigationDrawer(
                             when (item.title) {
                                 "Prioridades" -> navPrioridadList()
                                 "Tickets" -> navTicketList()
+                                "Sistemas" -> navSistemaList()
 
                             }
                         },
