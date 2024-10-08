@@ -38,7 +38,7 @@ object AppModule {
     fun provideTicketDao(prioridadDb: PrioridadDb) =
         prioridadDb.ticketDao()
 
-    const val BASE_URL = "https://www.themealdb.com/api/json/v1/1"
+    const val BASE_URL = "https://apiretrofit-bvhqepbygdeud5gs.eastus2-01.azurewebsites.net/"
 
     @Singleton
     @Provides

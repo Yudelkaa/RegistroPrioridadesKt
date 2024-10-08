@@ -14,14 +14,14 @@ interface SistemasApi {
     suspend fun getSistema(@Path("id") id: Int) : SistemaDto
 
     @GET("api/Sistemas")
-    suspend fun getSistemas() : List<SistemaDto>
+    suspend fun getSistemas(): List<SistemaDto>
 
-    @POST("api/Ssistemas")
+    @POST("api/Sistemas")
     suspend fun addSistema(@Body sistemaDto: SistemaDto?): SistemaDto
 
     @PUT("api/Sistemas/{id}")
-    suspend fun updateSistema(@Path("id") id: Int, @Body sistemaDto: SistemaDto)
+    suspend fun updateSistema(@Path("id") id: Int, @Body sistemaDto: SistemaDto?): SistemaDto
 
-    @DELETE("api/Sistema/{id}")
+    @DELETE("api/Sistemas/{id}")
     suspend fun deleteSistema(@Path("id") id: Int): Response<Unit>
 }
