@@ -29,7 +29,6 @@ class TicketViewModel @Inject constructor(
 
     fun setTicketId(id: Int?) {
         if (id == null || id == 0) {
-            // Reset UI state for a new ticket
             _uiState.update {
                 it.copy(
                     ticketId = 0,
@@ -112,7 +111,6 @@ class TicketViewModel @Inject constructor(
         return isValid
     }
 
-    // Método para borrar un ticket
     fun delete(ticketId: Int) {
         viewModelScope.launch {
             val currentTicketId = _uiState.value.ticketId
@@ -120,7 +118,7 @@ class TicketViewModel @Inject constructor(
                 val ticket = ticketRepository.getTicket(currentTicketId)
                 ticket?.let {
                     ticketRepository.deleteTicket(it)
-                    _uiState.update { it.copy(errorMessage = null) } // Reset error message
+                    _uiState.update { it.copy(errorMessage = null) }
                 }
             } else {
                 _uiState.update { it.copy(errorMessage = "ID de ticket no válido") }
